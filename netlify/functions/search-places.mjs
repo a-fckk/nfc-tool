@@ -1,36 +1,60 @@
-const GOOGLE_ENDPOINT = "https://places.googleapis.com/v1/places:searchText";
+const GOOGLE_ENDPOINT =
+  "https://places.googleapis.com/v1/places:searchText";
 
-const json = (statusCode, body) => ({
-  statusCode,
-  headers: {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store"
-  },
-  body: JSON.stringify(body)
-});
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
+  });
+}
 
-export default async (request) => {
+export default async function handler(request) {
   if (request.method !== "POST") {
-    return json(405, { error: "Méthode non autorisée." });
+    return jsonResponse(
+      { error: "Méthode non autorisée." },
+      405
+    );
   }
 
   const apiKey = Netlify.env.get("GOOGLE_MAPS_API_KEY");
+
   if (!apiKey) {
-    return json(500, {
-      error: "La variable GOOGLE_MAPS_API_KEY n’est pas configurée sur Netlify."
-    });
+    return jsonResponse(
+      {
+        error:
+          "La variable GOOGLE_MAPS_API_KEY n’est pas configurée sur Netlify.",
+      },
+      500
+    );
   }
 
   let payload;
+
   try {
     payload = await request.json();
   } catch {
-    return json(400, { error: "Corps de requête invalide." });
+    return jsonResponse(
+      { error: "Corps de requête invalide." },
+      400
+    );
   }
 
-  const query = typeof payload?.query === "string" ? payload.query.trim() : "";
+  const query =
+    typeof payload?.query === "string"
+      ? payload.query.trim()
+      : "";
+
   if (query.length < 3 || query.length > 200) {
-    return json(400, { error: "La recherche doit contenir entre 3 et 200 caractères." });
+    return jsonResponse(
+      {
+        error:
+          "La recherche doit contenir entre 3 et 200 caractères.",
+      },
+      400
+    );
   }
 
   try {
@@ -45,25 +69,29 @@ export default async (request) => {
           "places.formattedAddress",
           "places.rating",
           "places.userRatingCount",
-          "places.googleMapsUri"
-        ].join(",")
+          "places.googleMapsUri",
+        ].join(","),
       },
       body: JSON.stringify({
         textQuery: query,
         languageCode: "fr",
-        regionCode: "FR",
-        maxResultCount: 5
-      })
+        maxResultCount: 5,
+      }),
     });
 
     const data = await googleResponse.json().catch(() => ({}));
 
     if (!googleResponse.ok) {
       console.error("Google Places error:", data);
-      const message =
-        data?.error?.message ||
-        "Google Places a refusé la requête. Vérifie l’API, la facturation et la clé.";
-      return json(googleResponse.status, { error: message });
+
+      return jsonResponse(
+        {
+          error:
+            data?.error?.message ||
+            "Google Places a refusé la requête.",
+        },
+        googleResponse.status
+      );
     }
 
     const places = (data.places || []).map((place) => ({
@@ -72,14 +100,19 @@ export default async (request) => {
       formattedAddress: place.formattedAddress || "",
       rating: place.rating,
       userRatingCount: place.userRatingCount,
-      googleMapsUri: place.googleMapsUri || ""
+      googleMapsUri: place.googleMapsUri || "",
     }));
 
-    return json(200, { places });
+    return jsonResponse({ places });
   } catch (error) {
-    console.error(error);
-    return json(502, {
-      error: "Impossible de joindre Google Places pour le moment."
-    });
+    console.error("Unexpected error:", error);
+
+    return jsonResponse(
+      {
+        error:
+          "Impossible de joindre Google Places pour le moment.",
+      },
+      502
+    );
   }
-};
+}
