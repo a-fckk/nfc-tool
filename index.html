@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#111827" />
+    <meta name="description" content="Retrouver un établissement et générer son lien direct pour laisser un avis Google." />
+    <title>Lien avis Google</title>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="card">
+        <div class="eyebrow">OUTIL NFC</div>
+        <h1>Générer un lien d’avis Google</h1>
+        <p class="intro">
+          Recherche un établissement, sélectionne le bon résultat et copie son lien direct de dépôt d’avis.
+        </p>
+
+        <form id="search-form">
+          <label for="query">Nom du commerce + ville</label>
+          <div class="search-row">
+            <input
+              id="query"
+              name="query"
+              type="search"
+              inputmode="search"
+              autocomplete="off"
+              placeholder="Ex. Salon Élégance Annemasse"
+              maxlength="200"
+              required
+            />
+            <button id="search-button" type="submit">Rechercher</button>
+          </div>
+        </form>
+
+        <p id="status" class="status" aria-live="polite"></p>
+        <div id="results" class="results"></div>
+      </section>
+    </main>
+
+    <template id="result-template">
+      <article class="result-card">
+        <div class="result-head">
+          <div>
+            <h2 class="place-name"></h2>
+            <p class="place-address"></p>
+          </div>
+          <div class="rating-wrap" hidden>
+            <span class="place-rating"></span>
+            <span class="place-count"></span>
+          </div>
+        </div>
+
+        <div class="place-id-row">
+          <code class="place-id"></code>
+          <button class="copy-id secondary" type="button">Copier l’ID</button>
+        </div>
+
+        <div class="actions">
+          <button class="copy-review primary" type="button">Copier le lien d’avis</button>
+          <a class="open-review secondary" target="_blank" rel="noopener noreferrer">
+            Tester
+          </a>
+          <a class="open-maps tertiary" target="_blank" rel="noopener noreferrer">
+            Voir la fiche
+          </a>
+        </div>
+
+        <p class="copied-message" aria-live="polite"></p>
+      </article>
+    </template>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
